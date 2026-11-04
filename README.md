@@ -14,8 +14,9 @@ server, and a security layer will guard them against prompt injection.
 - [x] Test suite on a synthetic database, CI with GitHub Actions
 - [x] Read-only SQL tool (known gap: `ATTACH` can still create an empty file, fixed in the
       security layer below)
-- [ ] Statistics and chart tools
-- [ ] LangGraph agent choosing between the tools
+- [x] Statistics and chart tools
+- [x] LangGraph agent choosing between the tools (graph tested in CI with a scripted model;
+      live run with Groq not yet recorded here)
 - [ ] MCP server exposing the same tools, with an example client
 - [ ] Security layer: allow-listed tables, output checks, prompt-injection test set
 - [ ] Evaluation: attacks tried and attacks blocked, with an honest list of limits
@@ -32,6 +33,14 @@ uv run pytest
 
 The tests run on a synthetic database: they need no API key and no network access.
 
+To ask the agent a question, copy `.env.example` to `.env`, add a free Groq API key, then:
+
+```bash
+uv run football-agent "Which team won the most home games in 2025-2026?"
+```
+
+The command prints each tool the model chose (`[tool] run_sql(...)`) before the answer.
+
 ## Data
 
 Match results and statistics for Ligue 1 seasons 2023-2024 to 2025-2026 (918 matches) come
@@ -42,7 +51,7 @@ columns are dropped. The tests use a small synthetic database (`tests/conftest.p
 ## Project layout
 
 ```
-src/football_stats_agent/   package: schema, read-only database access, SQL tool so far
+src/football_stats_agent/   package: read-only database access, tools, agent, CLI
 scripts/prepare_data.py     data download and SQLite build
 tests/                      pytest suite, synthetic fixtures
 docs/learning_log.md        who wrote what, and what was learned
