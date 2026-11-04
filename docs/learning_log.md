@@ -13,4 +13,4 @@ the core logic was written by Aymen. This log keeps that split honest, phase by 
 
 ## Phase 1 — read-only connection and SQL tool (written by Aymen)
 
-_TODO_
+In progress.
