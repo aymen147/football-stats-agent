@@ -1,8 +1,6 @@
 """LangGraph agent: an LLM that chooses between the SQL, statistics and chart tools."""
 
-import sqlite3
 from pathlib import Path
-from typing import Any
 
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
@@ -12,15 +10,15 @@ from langgraph.graph.state import CompiledStateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.prebuilt.tool_node import ToolInvocationError
 
-from football_stats_agent import tools
 from football_stats_agent.schema import CREATE_MATCHES
+from football_stats_agent.toolset import RECOVERABLE_ERRORS, bind_tools
 
 # Each model call and each tool call is one step: this bounds cost and endless loops.
 MAX_GRAPH_STEPS = 12
 
 # Errors sent back to the model as a tool message so it can fix its call.
 # Anything else is a bug and stops the run.
-RECOVERABLE_TOOL_ERRORS = (sqlite3.Error, ValueError, ToolInvocationError)
+RECOVERABLE_TOOL_ERRORS = (*RECOVERABLE_ERRORS, ToolInvocationError)
 
 SYSTEM_PROMPT = f"""You answer questions about French Ligue 1 football, seasons 2023-2024 to
 2025-2026, using only the tools below. Never invent a number: every figure in your answer
@@ -39,28 +37,8 @@ Guidelines:
 
 
 def build_tools(db_path: Path, charts_dir: Path) -> list[BaseTool]:
-    """Wrap the tool functions so the model never chooses a file path."""
-
-    @tool
-    def run_sql(query: str) -> dict[str, Any]:
-        """Run one read-only SQL query on the `matches` table. Returns columns and at
-        most 50 rows; if `truncated` is true, refine the query (WHERE, GROUP BY, LIMIT)."""
-        return tools.run_sql(query, db_path)
-
-    @tool
-    def team_stats(team: str, season: str | None = None) -> dict[str, Any]:
-        """Summary for one team: played, wins, draws, losses, points, goals for and
-        against, average shots, cards. `season` like '2024-2025'; omit it for all seasons."""
-        return tools.team_stats(team, db_path, season)
-
-    @tool
-    def make_chart(
-        title: str, labels: list[str], values: list[float], kind: str = "bar"
-    ) -> dict[str, str]:
-        """Draw a 'bar' or 'line' chart (1 to 30 points) and return the PNG path."""
-        return tools.make_chart(title, labels, values, charts_dir, kind)
-
-    return [run_sql, team_stats, make_chart]
+    """The shared tool set (see toolset.py), as LangChain tools."""
+    return [tool(function) for function in bind_tools(db_path, charts_dir)]
 
 
 def build_agent(model: BaseChatModel, db_path: Path, charts_dir: Path) -> CompiledStateGraph:
