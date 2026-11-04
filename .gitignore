@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets
+.env
+
+# Data: downloaded from football-data.co.uk, never committed
+data/raw/
+data/*.db
+
+# Generated charts
+charts/
