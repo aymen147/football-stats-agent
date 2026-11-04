@@ -12,7 +12,8 @@ server, and a security layer will guard them against prompt injection.
 
 - [x] Data pipeline: Ligue 1 statistics downloaded and loaded into SQLite
 - [x] Test suite on a synthetic database, CI with GitHub Actions
-- [ ] Read-only SQL tool
+- [x] Read-only SQL tool (known gap: `ATTACH` can still create an empty file, fixed in the
+      security layer below)
 - [ ] Statistics and chart tools
 - [ ] LangGraph agent choosing between the tools
 - [ ] MCP server exposing the same tools, with an example client
@@ -41,7 +42,7 @@ columns are dropped. The tests use a small synthetic database (`tests/conftest.p
 ## Project layout
 
 ```
-src/football_stats_agent/   package: configuration and database schema so far
+src/football_stats_agent/   package: schema, read-only database access, SQL tool so far
 scripts/prepare_data.py     data download and SQLite build
 tests/                      pytest suite, synthetic fixtures
 docs/learning_log.md        who wrote what, and what was learned
