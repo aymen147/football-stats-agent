@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from football_stats_agent import tools
+from football_stats_agent.security import sanitize
 
 # Expected failures (refused or invalid query, unknown team...): their message is shown to
 # the model or MCP client so it can correct the call. Any other exception is a bug.
@@ -20,12 +21,12 @@ def bind_tools(db_path: Path, charts_dir: Path) -> list[Callable[..., Any]]:
     def run_sql(query: str) -> dict[str, Any]:
         """Run one read-only SQL query on the `matches` table. Returns columns and at
         most 50 rows; if `truncated` is true, refine the query (WHERE, GROUP BY, LIMIT)."""
-        return tools.run_sql(query, db_path)
+        return sanitize(tools.run_sql(query, db_path))
 
     def team_stats(team: str, season: str | None = None) -> dict[str, Any]:
         """Summary for one team: played, wins, draws, losses, points, goals for and
         against, average shots, cards. `season` like '2024-2025'; omit it for all seasons."""
-        return tools.team_stats(team, db_path, season)
+        return sanitize(tools.team_stats(team, db_path, season))
 
     def make_chart(
         title: str, labels: list[str], values: list[float], kind: str = "bar"

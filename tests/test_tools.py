@@ -24,19 +24,30 @@ def test_run_sql_returns_columns_and_rows(db_path):
     }
 
 
-@pytest.mark.parametrize(
-    "statement",
-    [
-        "DELETE FROM matches",
-        "UPDATE matches SET home_goals = 99",
-        "INSERT INTO matches (season, match_date, home_team, away_team, home_goals, "
-        "away_goals, result) VALUES ('x', 'x', 'x', 'x', 0, 0, 'D')",
-        "DROP TABLE matches",
-        "CREATE TABLE stolen (secret TEXT)",
-    ],
-)
+WRITE_STATEMENTS = [
+    "DELETE FROM matches",
+    "UPDATE matches SET home_goals = 99",
+    "INSERT INTO matches (season, match_date, home_team, away_team, home_goals, "
+    "away_goals, result) VALUES ('x', 'x', 'x', 'x', 0, 0, 'D')",
+    "DROP TABLE matches",
+    "CREATE TABLE stolen (secret TEXT)",
+]
+
+
+@pytest.mark.parametrize("statement", WRITE_STATEMENTS)
+def test_read_only_connection_alone_refuses_writes(db_path, statement):
+    # Layer 1 on its own, without the authorizer: the engine refuses to write.
+    conn = connect_read_only(db_path)
+    try:
+        with pytest.raises(sqlite3.OperationalError, match="readonly"):
+            conn.execute(statement)
+    finally:
+        conn.close()
+
+
+@pytest.mark.parametrize("statement", WRITE_STATEMENTS)
 def test_run_sql_cannot_modify_the_database(db_path, statement):
-    with pytest.raises(sqlite3.OperationalError, match="readonly"):
+    with pytest.raises(sqlite3.DatabaseError):
         run_sql(statement, db_path)
 
     count = run_sql("SELECT COUNT(*) FROM matches", db_path)
@@ -71,10 +82,6 @@ def test_connect_read_only_does_not_create_a_missing_file(tmp_path):
     assert not missing.exists()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="mode=ro does not stop ATTACH from creating a file; the phase 4 authorizer will",
-)
 def test_run_sql_cannot_create_files_with_attach(db_path, tmp_path):
     target = tmp_path / "attached.db"
 

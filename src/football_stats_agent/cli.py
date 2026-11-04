@@ -14,6 +14,7 @@ from langchain_groq import ChatGroq
 
 from football_stats_agent.agent import ask, build_agent
 from football_stats_agent.config import CHARTS_DIR, DB_PATH
+from football_stats_agent.security import check_answer
 
 DEFAULT_MODEL = "openai/gpt-oss-120b"
 
@@ -38,7 +39,9 @@ def main() -> None:
         if isinstance(message, AIMessage):
             for call in message.tool_calls:
                 print(f"[tool] {call['name']}({call['args']})")
-    print(messages[-1].content)
+    answer = messages[-1].content
+    problems = check_answer(answer)
+    print(f"[answer withheld by output check: {', '.join(problems)}]" if problems else answer)
 
 
 if __name__ == "__main__":

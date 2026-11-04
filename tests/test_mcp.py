@@ -37,5 +37,5 @@ def test_server_reports_a_refused_write_as_a_tool_error(db_path, tmp_path):
     result = call(build_server(db_path, tmp_path), "run_sql", {"query": "DELETE FROM matches"})
 
     assert result.is_error
-    assert "readonly" in result.content[0].text
+    assert "not authorized" in result.content[0].text
     assert run_sql("SELECT COUNT(*) FROM matches", db_path)["rows"] == [[len(SYNTHETIC_MATCHES)]]

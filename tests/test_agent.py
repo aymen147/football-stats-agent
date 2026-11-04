@@ -53,7 +53,7 @@ def test_tool_errors_go_back_to_the_model_instead_of_crashing(db_path, tmp_path)
 
     [result] = tool_messages(messages)
     assert result.status == "error"
-    assert "readonly" in result.content
+    assert "not authorized" in result.content
     assert run_sql("SELECT COUNT(*) FROM matches", db_path)["rows"] == [[len(SYNTHETIC_MATCHES)]]
 
 

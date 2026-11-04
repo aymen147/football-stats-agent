@@ -7,7 +7,7 @@ from typing import Any
 import pandas as pd
 from matplotlib.figure import Figure
 
-from football_stats_agent.db import connect_read_only
+from football_stats_agent.db import connect_for_tools
 
 DEFAULT_MAX_ROWS = 50
 MAX_CHART_POINTS = 30
@@ -23,7 +23,7 @@ def run_sql(query: str, db_path: Path, max_rows: int = DEFAULT_MAX_ROWS) -> dict
     """
     if max_rows < 1:
         raise ValueError("max_rows must be at least 1")
-    conn = connect_read_only(db_path)
+    conn = connect_for_tools(db_path)
     try:
         cursor = conn.execute(query)
         columns = [column[0] for column in cursor.description or []]
@@ -52,7 +52,7 @@ def team_stats(team: str, db_path: Path, season: str | None = None) -> dict[str,
     if season:
         query += " AND season = ?"
         params.append(season)
-    conn = connect_read_only(db_path)
+    conn = connect_for_tools(db_path)
     try:
         games = pd.read_sql_query(query, conn, params=params)
         if games.empty:
