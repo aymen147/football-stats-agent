@@ -57,3 +57,18 @@ Finding: a fake model that returns the *same* message object loops only once —
 - `mcp_client.py`: `Client(StdioServerParameters(...))` launches the server as a subprocess
   and talks MCP over stdin/stdout. Tests pass the server object to `Client` directly
   (in-process), which needs no subprocess.
+
+## Phase 4 — security layer and prompt-injection test set (prepared with help, reviewed by Aymen)
+
+- `security.py`: `set_authorizer` makes SQLite check every statement while compiling it —
+  only `SELECT` and reads of the allow-listed `matches` table pass. This is an allow-list
+  enforced by the engine, unlike a regex on the query text. It closed the phase 1 gap
+  (`ATTACH` creating a file). `set_progress_handler` interrupts runaway queries.
+- Tool results are sanitized (instruction-like text removed) and final answers are checked
+  (URLs, secret-looking strings). These two are regex heuristics and are measured as such.
+- `evaluation.py`: 27 attacks, each assuming the model has already been fooled. 24 blocked;
+  the 3 that pass (paraphrased planted instructions in English and French, a secret spelled
+  out) stay in the set as documented gaps, and a test fails if the numbers change.
+- Defence in depth is tested layer by layer: `test_read_only_connection_alone_refuses_writes`
+  proves the read-only connection blocks writes even without the authorizer.
+- Not measured: how often the LLM itself obeys an injection (needs live runs).
