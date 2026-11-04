@@ -15,7 +15,7 @@ from langchain_groq import ChatGroq
 from football_stats_agent.agent import ask, build_agent
 from football_stats_agent.config import CHARTS_DIR, DB_PATH
 
-DEFAULT_MODEL = "llama-3.3-70b-versatile"
+DEFAULT_MODEL = "openai/gpt-oss-120b"
 
 
 def main() -> None:
@@ -23,6 +23,8 @@ def main() -> None:
     parser.add_argument("question")
     args = parser.parse_args()
 
+    # Windows consoles default to cp1252, which cannot print French typography (e.g. U+202F).
+    sys.stdout.reconfigure(encoding="utf-8")
     load_dotenv()
     if not os.environ.get("GROQ_API_KEY"):
         sys.exit("GROQ_API_KEY is missing: copy .env.example to .env and add your key.")
