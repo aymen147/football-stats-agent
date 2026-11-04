@@ -43,3 +43,17 @@ security layer (phase 4) denies it.
 
 Finding: a fake model that returns the *same* message object loops only once — LangGraph's
 `add_messages` replaces a message whose id it has already seen instead of appending it.
+
+## Phase 3 — MCP server and client (prepared with help, reviewed by Aymen)
+
+- `toolset.py`: the three tools are defined once and shared by the agent (wrapped with
+  LangChain's `tool`) and the MCP server, so both expose exactly the same capabilities.
+- `mcp_server.py`: `MCPServer` from the official SDK, version 2 (where v1's `FastMCP` was
+  renamed). Each tool is registered from its signature and docstring; the `dict` return type
+  gives structured output.
+- MCP SDK v2 hides the message of unexpected exceptions from clients (good: no internal
+  details leak). Expected errors are re-raised as `ToolError`, whose message is forwarded,
+  so a client learns *why* a call was refused.
+- `mcp_client.py`: `Client(StdioServerParameters(...))` launches the server as a subprocess
+  and talks MCP over stdin/stdout. Tests pass the server object to `Client` directly
+  (in-process), which needs no subprocess.

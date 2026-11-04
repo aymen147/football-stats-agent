@@ -17,7 +17,7 @@ server, and a security layer will guard them against prompt injection.
 - [x] Statistics and chart tools
 - [x] LangGraph agent choosing between the tools (graph tested in CI with a scripted model;
       live runs with Groq below)
-- [ ] MCP server exposing the same tools, with an example client
+- [x] MCP server exposing the same tools, with an example client
 - [ ] Security layer: allow-listed tables, output checks, prompt-injection test set
 - [ ] Evaluation: attacks tried and attacks blocked, with an honest list of limits
 
@@ -59,6 +59,25 @@ $ uv run football-agent "Fais un graphique des points de Lens, Paris SG et Marse
 
 In the second run the model chained four tool calls on its own: three statistics lookups,
 then a chart built from their results. LLM output can vary from one run to the next.
+
+## MCP server
+
+The agent's three tools are defined once (`toolset.py`) and exposed both to the LangGraph
+agent and to an MCP server built with the official Python SDK (`mcp` 2.x, `MCPServer`,
+stdio transport). Any MCP client can use them; `football-mcp-demo` starts the server as a
+subprocess and calls it:
+
+```
+$ uv run football-mcp-demo
+tools: run_sql, team_stats, make_chart
+team_stats(Lens, 2025-2026):
+{ "team": "Lens", "season": "2025-2026", "played": 34, "wins": 22, "points": 70, ... }
+run_sql(DELETE FROM matches) -> error: Error executing tool run_sql: attempt to write a readonly database
+```
+
+To plug it into another MCP client, register the command `uv run football-mcp-server`
+with this repository as working directory. In CI, the server is tested in-process
+(`tests/test_mcp.py`); the stdio demo above was run locally.
 
 ## Data
 

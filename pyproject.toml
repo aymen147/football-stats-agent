@@ -17,6 +17,8 @@ dependencies = [
 
 [project.scripts]
 football-agent = "football_stats_agent.cli:main"
+football-mcp-server = "football_stats_agent.mcp_server:main"
+football-mcp-demo = "football_stats_agent.mcp_client:main"
 
 [build-system]
 requires = ["uv_build>=0.12.5,<0.13.0"]
