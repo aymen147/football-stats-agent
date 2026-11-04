@@ -16,7 +16,7 @@ server, and a security layer will guard them against prompt injection.
       security layer below)
 - [x] Statistics and chart tools
 - [x] LangGraph agent choosing between the tools (graph tested in CI with a scripted model;
-      live run with Groq not yet recorded here)
+      live runs with Groq below)
 - [ ] MCP server exposing the same tools, with an example client
 - [ ] Security layer: allow-listed tables, output checks, prompt-injection test set
 - [ ] Evaluation: attacks tried and attacks blocked, with an honest list of limits
@@ -40,6 +40,25 @@ uv run football-agent "Which team won the most home games in 2025-2026?"
 ```
 
 The command prints each tool the model chose (`[tool] run_sql(...)`) before the answer.
+
+### Example runs
+
+Recorded on 2026-11-04 with `openai/gpt-oss-120b` on Groq (outputs copied as printed):
+
+```
+$ uv run football-agent "Quelle équipe a gagné le plus de matchs à domicile en 2025-2026 ?"
+[tool] run_sql({'query': "SELECT home_team AS team, COUNT(*) AS home_wins FROM matches WHERE season = '2025-2026' AND result = 'H' GROUP BY home_team ORDER BY home_wins DESC LIMIT 1;"})
+L'équipe qui a remporté le plus de matchs à domicile en saison 2025-2026 est **Lens**, avec 14 victoires à domicile.
+
+$ uv run football-agent "Fais un graphique des points de Lens, Paris SG et Marseille en 2025-2026"
+[tool] team_stats({'season': '2025-2026', 'team': 'Lens'})
+[tool] team_stats({'season': '2025-2026', 'team': 'Paris SG'})
+[tool] team_stats({'season': '2025-2026', 'team': 'Marseille'})
+[tool] make_chart({'kind': 'bar', 'labels': ['Lens', 'Paris SG', 'Marseille'], 'title': 'Points 2025-2026', 'values': [70, 76, 59]})
+```
+
+In the second run the model chained four tool calls on its own: three statistics lookups,
+then a chart built from their results. LLM output can vary from one run to the next.
 
 ## Data
 
